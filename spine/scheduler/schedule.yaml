@@ -1,0 +1,82 @@
+# Spine periodic scheduler — ATB's cron-shaped jobs, under ONE owner (U3).
+#
+# Cadence vocabulary (see cadence.py):
+#   every:<N>m | every:<N>h   intra-day interval since last attempt
+#   daily@HH:MM               once a day at local HH:MM
+#   weekly:DAY@HH:MM          once a week (MON..SUN) at local HH:MM
+#
+# Fields:
+#   command      shell command; template vars {hermes_scripts} {build_arm} {project_root}
+#   cadence      one of the forms above
+#   model        local model slot this job contends for (null = none); drives PARALLEL=1
+#   self_locks   true = the job takes state/.model.lock itself (scheduler must NOT
+#                double-hold it, or it deadlocks the job out). True for both
+#                model jobs: aux-watchdog and improvement-feeder (its Tier-2 spawn
+#                takes think_sweep's blocking flock). Non-self-locking model jobs
+#                (future) are wrapped by the scheduler's model_slot instead.
+#   timeout_minutes  hard subprocess timeout
+#   priority     0 = liveness-critical (run first), higher = later
+#   enabled      MIGRATION GATE: ships false. The live cutover flips each job to
+#                true one at a time AS its Hermes gateway cron is retired, so the
+#                two schedulers never double-run the same job. (U3 governance:
+#                migrate one at a time, never headless.)
+#
+# Jobs invoke the existing ~/.hermes/scripts/atb_*.sh wrappers verbatim: they
+# already fix cwd, bridge secrets (OpenRouter key), and compute windows
+# (improvement-feeder's --date). The scheduler owns cadence + the model slot +
+# liveness; the wrappers stay the stable job interface.
+
+tick_minutes: 5
+
+tasks:
+  - id: aux-watchdog
+    command: "bash {hermes_scripts}/atb_aux_watchdog.sh"
+    cadence: "every:30m"
+    model: "qwen3.5-9b"     # manages the aux 9B residency
+    self_locks: true         # tools/aux_watchdog.py takes MODEL_LOCK itself
+    timeout_minutes: 5
+    priority: 0
+    enabled: true   # MIGRATED 2026-06-26
+
+  - id: stall-alert
+    command: "bash {hermes_scripts}/atb_stall_alert.sh"
+    cadence: "every:30m"
+    model: null
+    timeout_minutes: 3
+    priority: 0
+    enabled: true   # MIGRATED 2026-06-26: gateway cron 8965043b5155 paused
+
+  - id: brain-sync
+    command: "bash {hermes_scripts}/atb_brain_sync.sh"
+    cadence: "every:6h"
+    model: null              # gbrain import/embed; no local model
+    timeout_minutes: 10
+    priority: 1
+    enabled: true   # MIGRATED 2026-06-26
+
+  - id: dream
+    command: "bash {hermes_scripts}/atb_dream.sh"
+    cadence: "daily@03:00"
+    model: null              # gbrain dream runs on OpenRouter, not the local slot
+    timeout_minutes: 30
+    priority: 1
+    enabled: true   # MIGRATED 2026-06-26
+
+  - id: brain-digest
+    command: "bash {hermes_scripts}/atb_brain_digest.sh"
+    cadence: "weekly:SAT@08:00"
+    model: null              # contradiction probe judged via OpenRouter
+    timeout_minutes: 10
+    priority: 1
+    enabled: true   # MIGRATED 2026-06-26
+
+  - id: improvement-feeder
+    command: "bash {hermes_scripts}/atb_improvement_sweep.sh"
+    cadence: "weekly:MON@11:00"
+    model: "qwen3.6-35b-a3b"  # Tier-2 cluster pass uses the local 35B
+    self_locks: true          # Tier-2 spawn takes think_sweep's BLOCKING flock on
+                              # state/.model.lock itself — the scheduler must NOT
+                              # pre-hold it or the child deadlocks (Codex U3 review).
+    timeout_minutes: 20       # gateway capped this at 120s and it errored; real budget here
+    priority: 2
+    enabled: true   # MIGRATED 2026-06-26

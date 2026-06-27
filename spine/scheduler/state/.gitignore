@@ -1,0 +1,4 @@
+# Scheduler runtime state — ledger, heartbeat, parked queue, lock — is local,
+# not source. Keep the directory tracked so the scheduler can write into it.
+*
+!.gitignore

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Spine periodic scheduler tick (U3). Authored but NOT loaded by the build phase;
+  loading it is the live-migration checkpoint (see ../README.md). launchd owns
+  liveness: it fires `scheduler tick` every 5 minutes independently of the Hermes
+  gateway, so a gateway death no longer silences the periodic jobs. Each tick is
+  short and single-instanced; it runs only the jobs whose cadence is due.
+
+  Interpreter + PYTHONPATH match the live ATB cron environment (miniforge base,
+  which carries pyyaml/jsonschema/requests). Verify both before `launchctl load`.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.perian.scheduler</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/Caskroom/miniforge/base/bin/python3</string>
+        <string>-m</string>
+        <string>scheduler</string>
+        <string>tick</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/path/to/perian</string>
+
+    <key>StartInterval</key>
+    <integer>300</integer>
+
+    <key>StandardOutPath</key>
+    <string>/path/to/perian/spine/scheduler/state/tick-stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/path/to/perian/spine/scheduler/state/tick-stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>PYTHONPATH</key>
+        <string>/path/to/perian/build-arm:/path/to/perian/spine</string>
+    </dict>
+</dict>
+</plist>
