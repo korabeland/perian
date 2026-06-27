@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/research-input.schema.json",
+  "title": "Research Input",
+  "description": "Structured evidence packet produced by Research. Input to Dreamer.",
+  "type": "object",
+  "required": ["job_id", "collected_at", "topic", "sources", "evidence", "watch_items", "summary"],
+  "properties": {
+    "job_id": {"type": "string", "description": "Unique job identifier"},
+    "collected_at": {"type": "string", "format": "date-time"},
+    "topic": {"type": "string"},
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "ref"],
+        "properties": {
+          "name": {"type": "string"},
+          "ref": {"type": "string", "description": "URL, file path, or named source"},
+          "consulted_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "source_ref"],
+        "properties": {
+          "claim": {"type": "string"},
+          "source_ref": {"type": "string"},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+        }
+      }
+    },
+    "watch_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["observation"],
+        "properties": {
+          "observation": {"type": "string"},
+          "rationale": {"type": "string"}
+        }
+      }
+    },
+    "summary": {"type": "string"},
+    "sanitized": {"type": "boolean", "description": "True if fabricated/sanitized demo data"}
+  }
+}

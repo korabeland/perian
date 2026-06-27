@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+
+# Runtime state + gbrain data layers (mostly not source; brains/ ~245M PGLite DBs).
+# Version the INFRA subtrees only: build/think contracts + gate verdicts.
+# Everything else under state/ stays ignored — generated, telemetry, or scratch:
+#   builds/ (each a nested git workspace), think-tmp/ (~332M), events.jsonl + logs,
+#   operational json, digests/think/research/shadow/experiments outputs.
+state/*
+!state/tracks/
+!state/tracks-held/
+brain/
+brains/
+.gbrain/
+
+# Backups, logs, OS cruft
+*.bak*
+*.log
+.DS_Store
+.pytest_cache/

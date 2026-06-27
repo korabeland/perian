@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/product-plan.schema.json",
+  "title": "Product Plan",
+  "description": "Main's bounded build packet for Coder. allowed_paths is a whitelist; non_goals is a don't-list.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job_id", "allowed_paths", "planned_files", "non_goals", "verification_commands", "acceptance_checks", "risk_assessment"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "drafted_at": {"type": "string", "format": "date-time"},
+    "allowed_paths": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "STRICT whitelist of paths Coder may edit"
+    },
+    "planned_files": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Specific files Coder will create or modify (subset of allowed_paths)"
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Explicit don't-list — Coder MUST NOT do these even if tempting"
+    },
+    "verification_commands": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Shell commands QA will re-run to verify the build"
+    },
+    "acceptance_checks": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Human-readable conditions that must be true after build"
+    },
+    "risk_assessment": {"type": "string"},
+    "protected_surface_notes": {"type": "string", "description": "Notes on protected surfaces (auth, payments, schemas)"},
+    "parent_criteria_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Decomposition trace (§9 LOW). Criterion ids this child plan owns from a parent work-breakdown split. ABSENT for a normally-authored plan; PRESENT only on a decomposition child, where decompose_check D9 requires it non-empty and exactly equal to the child's owned coverage ids."
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/verification.schema.json",
+  "title": "Verification",
+  "description": "Coder's own verification receipts. Independent re-verification by QA produces qa-verification.json.",
+  "type": "object",
+  "required": ["job_id", "ran_at", "commands_run", "outputs", "pass", "verifier"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "ran_at": {"type": "string", "format": "date-time"},
+    "commands_run": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Shell commands actually executed; should match product-plan.verification_commands"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "exit_code", "stdout_excerpt"],
+        "properties": {
+          "command": {"type": "string"},
+          "exit_code": {"type": "integer"},
+          "stdout_excerpt": {"type": "string"},
+          "stderr_excerpt": {"type": "string"},
+          "duration_seconds": {"type": "number"}
+        }
+      }
+    },
+    "pass": {"type": "boolean", "description": "Honest pass/fail. If any verification_command failed, this is false."},
+    "evidence_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "References to artifacts produced by the build"
+    },
+    "verifier": {"type": "string", "const": "coder"},
+    "notes": {"type": "string"}
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/verification-delta.schema.json",
+  "title": "Verification Delta",
+  "description": "QA's comparison of Coder's verification vs QA's independent verification.",
+  "type": "object",
+  "required": ["job_id", "compared_at", "state", "differences", "notes"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "compared_at": {"type": "string", "format": "date-time"},
+    "state": {
+      "type": "string",
+      "enum": ["confirmed", "drift", "regression", "missing_evidence"],
+      "description": "confirmed=outputs agree; drift=different but not worse; regression=actual failures or worse; missing_evidence=incomplete claims"
+    },
+    "differences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "coder_claim", "qa_finding"],
+        "properties": {
+          "field": {"type": "string"},
+          "coder_claim": {"type": "string"},
+          "qa_finding": {"type": "string"}
+        }
+      }
+    },
+    "notes": {"type": "string"}
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ATB meta-audit packet",
+  "description": "The bundle of sampled IMPROVER artifacts a verify-the-verifier meta-audit run hands to its cross-family seats (Phase 3). Assembled deterministically by tools/meta_audit_run.py from trusted sources — overseer-decision-records, a window of gate/coach/council judgment events, and the loop-closure state — then fenced to the seats as untrusted DATA. The seats judge whether the IMPROVERS did their job; they never judge a build's code. This schema validates the packet's SHAPE before it is sent, catching assembly bugs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target_family", "generated_ts", "decision_records", "gate_judgments", "loop_closure"],
+  "properties": {
+    "target_family": {
+      "type": "string",
+      "enum": ["claude", "codex"],
+      "description": "The improver family being audited (Claude Code overseer / Codex gate+coach). Its own seats are advisory-only in synthesis; gemini is never a target (it is a council voter, not an improver)."
+    },
+    "generated_ts": {
+      "type": "string",
+      "description": "UTC timestamp the packet was assembled."
+    },
+    "decision_records": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sampled", "total", "invalid_count"],
+      "description": "Sampled overseer-decision-records (most recent first) plus totals — so the seats can judge grounding + independent certification, and a record that fails to load is surfaced as a count (never silently dropped).",
+      "properties": {
+        "sampled": {"type": "array"},
+        "total": {"type": "integer", "minimum": 0},
+        "invalid_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "gate_judgments": {
+      "type": "array",
+      "description": "A recent window of verifier judgment events (codex-review / gate-pass / gate-held / coach / coach-exhausted / council-verdict / validation-failed) — so the seats can judge whether the gate calls were internally sound."
+    },
+    "loop_closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "open", "deferred", "stale_defers", "broken"],
+      "description": "The loop-closure ledger state (from Phase 2's check) — so the seats can cross-check whether detections resolved or were dropped.",
+      "properties": {
+        "ok": {"type": "boolean"},
+        "open": {"type": "array"},
+        "deferred": {"type": "array"},
+        "stale_defers": {"type": "array"},
+        "broken": {"type": "array"}
+      }
+    }
+  }
+}

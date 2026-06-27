@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ATB overseer-decision-record",
+  "description": "The accountability artifact an OVERSEER (Claude Code or Codex) must emit for every agent-affecting decision — a choice to rewrite (or deliberately NOT rewrite) one of a small agent's rewritable layers (identity/skill/tool/context). It makes the overseer charter BITE: the completeness-reconciliation check (tools/decision_record_check.py) binds every durable agent-layer git change to one of these records, and flags any layer change with no linked record. This schema validates SHAPE only; soundness of the decision stays with Codex + the overseer + Korab (doer != certifier). Schema-valid != sound.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "created_ts",
+    "target_agent",
+    "grounding_pack_id",
+    "memory_refs",
+    "log_refs",
+    "detector_source_refs",
+    "layer_considered",
+    "decision",
+    "certifier",
+    "status",
+    "summary"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^odr-[A-Za-z0-9._-]+$",
+      "description": "Stable, unique record id (e.g. odr-20260620T120000Z-coder-contract-shape). Referenced verbatim by the `Decision-Record: <id>` git trailer on the resulting profiles-repo commit (bidirectional binding)."
+    },
+    "created_ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp the record was authored (YYYY-MM-DDTHH:MM:SSZ)."
+    },
+    "target_agent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The agent or actor whose layer the decision concerns — a crew agent (coder/qa/main/dreamer/research) or an improver pointed UP the stack (codex/overseer/system)."
+    },
+    "grounding_pack_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The grounding-pack id (tools/grounding_pack.py output) the decision was grounded in — the charter's reflex #1. Required even for a no_change/defer decision (you grounded that too)."
+    },
+    "memory_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Memory slugs/links consulted (operating thesis, prior promotions, identity-first law, corpus state, ...). At least one — a decision made from recall, not memory, violates the charter."
+    },
+    "log_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Event/log references consulted (events.jsonl ids, feedback/round-N.md paths, gate-held diffs). May be empty for a purely proactive decision."
+    },
+    "detector_source_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "The EXISTING-detector artifacts that triggered this (coach lesson refs, Improvement-Feeder class ids, gate-held event ids). May be empty for a proactive decision; a recurrence-driven one should cite >=1."
+    },
+    "layer_considered": {
+      "type": "string",
+      "enum": ["identity", "skill", "tool", "context", "none"],
+      "description": "Which refinement surface the decision concerns. 'none' is valid only with decision=no_change/defer."
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["layer-rewrite", "no_change", "defer"],
+      "description": "layer-rewrite = a durable change was applied (MUST end with a linked profiles-repo commit + commit_hash); no_change = considered and deliberately left as-is; defer = postponed (set expiry)."
+    },
+    "certifier": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Who certified the decision, independent of the doer (e.g. 'codex', 'korab', 'codex+korab'). doer != certifier, pointed UP the stack."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "applied", "certified", "reverted"],
+      "description": "Lifecycle. A layer-rewrite reaches 'applied'/'certified' only once the commit exists and commit_hash is filled (the completeness check binds this)."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line human-readable description of the decision (renders in the audit digest)."
+    },
+    "commit_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,64}$",
+      "description": "The resulting profiles-repo commit SHA for an applied layer-rewrite (the back-half of the bidirectional binding). Absent for proposed/no_change/defer. Hex, 7-64 chars."
+    },
+    "overfit_analysis": {
+      "type": "string",
+      "description": "For a layer-rewrite: the anti-over-fit reasoning (which corpus envelope, why this is a general agent weakness not monoculture residue, the bounded wording). Recommended; the PROMOTE governance enforces its substance."
+    },
+    "expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "For decision=defer: the date after which the deferral is stale and must be revisited (no silent indefinite defer)."
+    },
+    "supersedes": {
+      "type": "string",
+      "description": "The id of a prior record this one revisits/replaces, if any."
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "An applied/certified layer-rewrite MUST carry its commit_hash (the back-half of the binding).",
+      "if": {
+        "properties": {"decision": {"const": "layer-rewrite"}, "status": {"enum": ["applied", "certified"]}},
+        "required": ["decision", "status"]
+      },
+      "then": {"required": ["commit_hash"]}
+    },
+    {
+      "$comment": "A proposed/reverted layer-rewrite has no live applied commit, so it MUST NOT cite one — else an uncertified record could back a real change (commit_hash present <=> applied/certified).",
+      "if": {
+        "properties": {"decision": {"const": "layer-rewrite"}, "status": {"enum": ["proposed", "reverted"]}},
+        "required": ["decision", "status"]
+      },
+      "then": {"not": {"required": ["commit_hash"]}}
+    },
+    {
+      "$comment": "A no_change / defer decision did not change a layer, so it MUST NOT cite a commit.",
+      "if": {
+        "properties": {"decision": {"enum": ["no_change", "defer"]}},
+        "required": ["decision"]
+      },
+      "then": {"not": {"required": ["commit_hash"]}}
+    },
+    {
+      "$comment": "A defer MUST set an expiry (no silent indefinite deferral).",
+      "if": {
+        "properties": {"decision": {"const": "defer"}},
+        "required": ["decision"]
+      },
+      "then": {"required": ["expiry"]}
+    },
+    {
+      "$comment": "layer_considered=none is coherent only when nothing was rewritten.",
+      "if": {
+        "properties": {"layer_considered": {"const": "none"}},
+        "required": ["layer_considered"]
+      },
+      "then": {"properties": {"decision": {"enum": ["no_change", "defer"]}}}
+    }
+  ]
+}

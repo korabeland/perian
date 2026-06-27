@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/idea-contract.schema.json",
+  "title": "Idea Contract",
+  "description": "Candidate idea proposed by Dreamer. Input to Main for intent-review and main-review.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job_id", "proposed_at", "what_should_exist", "who_benefits", "why_now", "evidence_refs", "out_of_scope", "where_it_lives", "how_verifiable"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "proposed_at": {"type": "string", "format": "date-time"},
+    "what_should_exist": {"type": "string", "description": "Concrete description of what would be built"},
+    "who_benefits": {"type": "string", "description": "Who or what is helped"},
+    "why_now": {"type": "string", "description": "What recent evidence makes this candidate worth surfacing now"},
+    "evidence_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Specific research-input files supporting this idea"
+    },
+    "out_of_scope": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Things explicitly NOT to do as part of this work"
+    },
+    "where_it_lives": {"type": "string", "description": "Suggested location (Main may override)"},
+    "how_verifiable": {"type": "string", "description": "How would success be measured"},
+    "parent_criteria_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Decomposition trace (§9 LOW). Criterion ids this child idea owns from a parent work-breakdown split. ABSENT for a normally-authored idea; PRESENT only on a decomposition child, where decompose_check D9 requires it non-empty and exactly equal to the child's owned coverage ids."
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/trust-report.schema.json",
+  "title": "Trust Report",
+  "description": "Room health summary written by Main after the build cycle.",
+  "type": "object",
+  "required": ["as_of", "room_state", "signals", "recommendations"],
+  "properties": {
+    "as_of": {"type": "string", "format": "date-time"},
+    "job_id": {"type": "string"},
+    "room_state": {
+      "type": "string",
+      "enum": ["clean", "watch", "investigate"],
+      "description": "clean=nothing to flag; watch=monitor closely; investigate=intervention needed"
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["signal", "severity"],
+        "properties": {
+          "signal": {"type": "string"},
+          "severity": {"type": "string", "enum": ["info", "warn", "alert"]}
+        }
+      }
+    },
+    "recommendations": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/intent-review.schema.json",
+  "title": "Intent Review",
+  "description": "Main's early filter on an idea-contract before formal approval.",
+  "type": "object",
+  "required": ["job_id", "reviewed_at", "decision", "reason"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "reviewed_at": {"type": "string", "format": "date-time"},
+    "decision": {"type": "string", "enum": ["promote", "reject", "needs_more"]},
+    "reason": {"type": "string", "description": "One-sentence rationale"},
+    "reviewer": {"type": "string", "default": "main"}
+  }
+}

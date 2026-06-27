@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/main-review.schema.json",
+  "title": "Main Review",
+  "description": "Main's formal approval gate decision.",
+  "type": "object",
+  "required": ["job_id", "reviewed_at", "decision", "risk_band", "approved_by"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "reviewed_at": {"type": "string", "format": "date-time"},
+    "decision": {"type": "string", "enum": ["approved_for_coder", "rejected", "needs_more"]},
+    "risk_band": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+    "risk_score": {"type": "integer", "minimum": 0, "maximum": 10},
+    "approved_by": {"type": "string", "default": "main"},
+    "auto_approved": {"type": "boolean", "default": false},
+    "force_approved": {"type": "boolean", "default": false},
+    "block_reason": {"type": ["string", "null"], "description": "If rejected/needs_more, why"},
+    "schema_version": {"type": "integer", "default": 2}
+  }
+}

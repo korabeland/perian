@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ATB loop-closure ledger entry",
+  "description": "A single entry in the overseer meta-layer's loop-closure ledger (Phase 2). It tracks ONE recurrence CLASS surfaced by an EXISTING detector (coach loop / Improvement Feeder / diff-gate hold) from detection -> decision, so a noticed weakness can never be silently dropped. The ledger adds NO new detector: an entry is keyed to existing-detector artifacts only. It NEVER authors a verdict — a resolved entry must CITE a trusted overseer-decision-record (the governance binding); the loop_closure_check tool only records and reconciles the binding, never judges which weakness is real or which layer to pick (doer != certifier). Schema-valid != sound.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "class_id",
+    "created_ts",
+    "target_agent",
+    "detector",
+    "summary",
+    "source_refs",
+    "status"
+  ],
+  "properties": {
+    "class_id": {
+      "type": "string",
+      "pattern": "^lcc-[A-Za-z0-9._-]+$",
+      "description": "Stable, unique recurrence-class id (e.g. lcc-coder-contract-shape-fidelity). One class = one recurring weakness, NOT one raw lesson (class granularity). Immutable once logged."
+    },
+    "created_ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp the ledger entry was authored (YYYY-MM-DDTHH:MM:SSZ)."
+    },
+    "target_agent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The agent/actor the recurring weakness concerns (coder/qa/main/dreamer/research, or an improver pointed UP: codex/overseer/system). The cited decision-record's target_agent MUST match (the check enforces it)."
+    },
+    "detector": {
+      "type": "string",
+      "enum": ["coach", "improvement_feeder", "gate_hold"],
+      "description": "Which EXISTING detector surfaced this class. Closed set on purpose — the meta-layer adds no new detector; extending this enum is a deliberate, reviewed schema change, never a silent one."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line human-readable description of the recurring weakness (renders in the audit digest)."
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The existing-detector artifacts this class is keyed to (>=1). Each anchors the class to a real, identifiable detector output with its content hash, so an entry cannot be a fabricated abstraction. Re-hashing against the live artifact is the meta-audit's job (Phase 3); this schema enforces the anchor's shape.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "hash"],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Immutable id of the detector artifact (e.g. coach:<job_id>:r<round>, an Improvement-Feeder class id, or an events.jsonl gate-hold event id)."
+          },
+          "hash": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Content hash of the detector artifact at the time this class was logged (tamper-evidence / drift anchor)."
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional human note about this source."
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "resolved"],
+      "description": "open = detected, no decision recorded yet (surfaced by the check, never a hold — work in progress). resolved = a decision has been recorded; decision_record MUST cite it. The KIND of resolution (layer-rewrite / no_change / defer) is read from the cited TRUSTED record, not asserted here (single source of truth)."
+    },
+    "decision_record": {
+      "type": "string",
+      "pattern": "^odr-[A-Za-z0-9._-]+$",
+      "description": "The overseer-decision-record id that resolves this class (the governance binding). Required iff status=resolved; forbidden iff status=open."
+    },
+    "supersedes": {
+      "type": "string",
+      "pattern": "^lcc-[A-Za-z0-9._-]+$",
+      "description": "The class_id of a prior entry this one revisits/replaces, if any."
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "A resolved class MUST cite the governance decision-record that closed it.",
+      "if": {
+        "properties": {"status": {"const": "resolved"}},
+        "required": ["status"]
+      },
+      "then": {"required": ["decision_record"]}
+    },
+    {
+      "$comment": "An open class has no decision yet, so it MUST NOT cite one (citing a record = resolved).",
+      "if": {
+        "properties": {"status": {"const": "open"}},
+        "required": ["status"]
+      },
+      "then": {"not": {"required": ["decision_record"]}}
+    }
+  ]
+}

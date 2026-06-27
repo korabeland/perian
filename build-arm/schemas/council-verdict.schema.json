@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/council-verdict.schema.json",
+  "title": "Council Verdict",
+  "description": "An independent council's ruling on a flagged idea-contract. Teacher-produced (frontier, e.g. Claude Code / Codex running the council skill), consumed by Main when EMBEDDED in its review prompt. Never crew-authored, never read off disk by the sandboxed Main. Lives at state/tracks/<job-id>/council/verdict.json. NOT a pipeline artifact (deliberately absent from ARTIFACT_SCHEMA_MAP, so the validator's completeness check never expects it in a track).",
+  "type": "object",
+  "required": ["job_id", "verdict", "risk_band"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "verdict": {"type": "string", "enum": ["PROCEED", "DONT_PROCEED", "NEEDS_MORE"]},
+    "risk_band": {"type": "string", "enum": ["low", "medium", "high", "critical"], "description": "Fail-closed gate value: the MOST SEVERE band across valid seat votes."},
+    "risk_band_consensus": {"type": "string", "enum": ["low", "medium", "high", "critical"], "description": "Advisory: the 2nd-most-severe band — resists a single seat spiking the risk. Not the gate value."},
+    "families": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}, "description": "Per-family seat verdicts (two personas per family). Six votes are not six independent signals — this shows cross-family agreement, not a head count."},
+    "reasons": {"type": "array", "items": {"type": "string"}},
+    "decided_at": {"type": "string", "format": "date-time"},
+    "decided_by": {"type": "string", "default": "council"}
+  }
+}

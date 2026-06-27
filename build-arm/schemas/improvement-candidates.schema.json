@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ATB improvement-feeder Tier-3 candidate entries",
+  "description": "Strict schema for the Codex (Tier-3) draft of candidate IMPROVEMENT_LOG.md entries. Drafts only — the overseer + Korab certify into the log (doer != certifier). tag is the universal-vs-build-specific judgment, the one call only a frontier model makes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["candidates"],
+  "properties": {
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["finding", "tag", "rationale", "proposed_fix", "where_it_lands", "confidence", "source_class_ids"],
+        "properties": {
+          "finding": {
+            "type": "string",
+            "description": "The system-level learning, one sentence — what creaked in ATB-the-system (not the build's own code)."
+          },
+          "tag": {
+            "type": "string",
+            "enum": ["universal", "build-specific"],
+            "description": "universal = recurs across build types -> worth building into the scaffolding; build-specific = an artifact of one contract or the pure-function monoculture -> must NOT be baked in."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Why this is universal or build-specific — the anti-over-fit reasoning."
+          },
+          "proposed_fix": {
+            "type": "string",
+            "description": "The concrete fix or change to the system."
+          },
+          "where_it_lands": {
+            "type": "string",
+            "description": "Which tool / gate / doc the fix lands in (e.g. gate_sweep.py, CLAUDE.md gotchas)."
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Codex's confidence that this is a real, actionable system improvement."
+          },
+          "source_class_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+            "description": "The Tier-2 recurrence class_ids this finding draws on (>=1). The tool renders the verified recurrence from these classes — Codex must NOT invent counts in prose. Each must exist in this run's classes (re-validated independently)."
+          }
+        }
+      }
+    }
+  }
+}

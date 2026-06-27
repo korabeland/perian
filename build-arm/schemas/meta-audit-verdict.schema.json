@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ATB meta-audit verdict (digest)",
+  "description": "The deterministic synthesis a verify-the-verifier meta-audit run writes (Phase 3) — a digest for Korab, NOT promotion authority and never auto-acted-on. Cross-family independence is structural: the audited (target) family's seats are ADVISORY; the BINDING verdict comes from the two non-target families, both required present (quorum_met). The tool records and synthesizes; it never judges a build's code. Schema-valid != sound.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "target_family", "verdict", "risk_band", "risk_band_consensus", "quorum_met",
+    "binding_families", "advisory_family", "seats", "findings", "routing", "decided_at", "decided_by"
+  ],
+  "properties": {
+    "target_family": {"type": "string", "description": "The improver family audited (advisory in this run)."},
+    "verdict": {
+      "type": "string",
+      "enum": ["SOUND", "FLAGGED", "NEEDS_MORE"],
+      "description": "Binding verdict from the two non-target families: SOUND = the improvers held up; FLAGGED = >=1 improver/verifier failure by binding majority; NEEDS_MORE = no majority OR cross-family quorum not met (inconclusive — never a clean pass on a broken panel)."
+    },
+    "risk_band": {"type": "string", "enum": ["low", "medium", "high", "critical"], "description": "Most-severe band among binding votes (fail-closed)."},
+    "risk_band_consensus": {"type": "string", "enum": ["low", "medium", "high", "critical"], "description": "2nd-most-severe band among binding votes (resists a single spike)."},
+    "quorum_met": {"type": "boolean", "description": "True only if BOTH non-target families cast >=1 valid binding vote — the cross-family independence guarantee. False => verdict is forced to NEEDS_MORE."},
+    "binding_families": {"type": "array", "items": {"type": "string"}, "description": "The two non-target families whose seats bind the verdict."},
+    "advisory_family": {"type": "string", "description": "The target family, whose seats are advisory-only here (doer != certifier pointed UP — a family cannot certify its own calls)."},
+    "seats": {"type": "object", "description": "Per-seat label -> vote/abstain summary (all six, binding + advisory)."},
+    "findings": {
+      "type": "array",
+      "description": "Per-seat findings, attributed and tagged role=binding|advisory, so even a minority/advisory concern is surfaced, never hidden.",
+      "items": {"type": "object"}
+    },
+    "routing": {
+      "type": "array",
+      "description": "Verifier-miss routing: build issues a binding seat surfaced via the 'ROUTE: <detector> | <note>' convention, lifted deterministically to {seat, detector, note}. The overseer/Korab routes these to the EXISTING detectors — the meta-audit never handles a build bug itself (no new bottom-up detector).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seat", "detector", "note"],
+        "properties": {
+          "seat": {"type": "string"},
+          "detector": {"type": "string", "enum": ["coach", "improvement_feeder", "gate_hold", "loop_closure"]},
+          "note": {"type": "string"}
+        }
+      }
+    },
+    "packet_summary": {"type": "object", "description": "Counts of what was audited (records/gate-judgments/loop-closure), for the digest header."},
+    "decided_at": {"type": "string", "description": "UTC timestamp the verdict was synthesized."},
+    "decided_by": {"type": "string", "description": "Provenance: which families bound vs were advisory (e.g. meta-audit:binding=claude+gemini;advisory=codex)."}
+  }
+}

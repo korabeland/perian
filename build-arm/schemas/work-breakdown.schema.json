@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/work-breakdown.schema.json",
+  "title": "Work Breakdown",
+  "description": "Decomposition §4b. Main's proposed split of one approved idea into atomic, dependency-ordered child tracks. STRUCTURAL shape only — the honesty checks (exact-partition coverage, dependency closure, acyclicity, provenance, large-child guard) are enforced by decompose_check D1-D9 reading TRUSTED records, never by this schema. complexity_derived is deliberately NOT a property: it is tool-derived from size_estimate.new_loc (display-only); additionalProperties:false forbids Main self-authoring it (design §8.1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parent_idea_id",
+    "drafted_at",
+    "authored_by",
+    "parent_criteria_ref",
+    "coverage",
+    "external_inputs",
+    "children"
+  ],
+  "properties": {
+    "parent_idea_id": {"type": "string", "minLength": 1},
+    "drafted_at": {"type": "string", "format": "date-time"},
+    "authored_by": {"type": "string", "minLength": 1, "description": "Doer identity (D8: certifier from wrapper events must differ from this)"},
+    "parent_criteria_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256"],
+      "description": "Advisory pointer to parent-criteria.json. The BINDING hash is in the wrapper-emitted criteria_frozen event (D1).",
+      "properties": {
+        "file": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "minItems": 1,
+      "description": "criterion_id -> owner_task_id. D2 requires this multiset to EXACTLY partition the frozen criteria set (each owned once, no drop/extra/dup).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion_id", "owner_task_id"],
+        "properties": {
+          "criterion_id": {"type": "string", "minLength": 1},
+          "owner_task_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "external_inputs": {
+      "type": "array",
+      "description": "Inputs sourced from OUTSIDE the child set. D5 accepts a requires against one of these only if its source_ref is a verified type. A bare string is rejected (source_ref must be a typed object).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "source_ref"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "source_ref": {"$ref": "#/$defs/source_ref"}
+        }
+      }
+    },
+    "children": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/child"}
+    }
+  },
+  "$defs": {
+    "canonical_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "description": "Canonical output id <task_id>.<output_id>: exactly one dot separator, each segment a safe id charset (no whitespace, path text, or repeated dots). D5 splits on the dot and resolves requires->produces by EXACT match. (Codex P1 finding 1.)"
+    },
+    "source_ref": {
+      "description": "Accepted external-input provenance (D5 verifies structurally by `kind` then shape). Exactly one of: git, sweep-fetch, frozen-verdict. A bare string fails (type must be object).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "commit", "path", "sha256"],
+          "properties": {
+            "kind": {"const": "git"},
+            "commit": {"type": "string", "minLength": 1},
+            "path": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "anchor", "event_id"],
+          "properties": {
+            "kind": {"const": "sweep-fetch"},
+            "anchor": {"type": "string", "minLength": 1},
+            "event_id": {"type": "string", "minLength": 1}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "verdict_id", "sha256"],
+          "properties": {
+            "kind": {"const": "frozen-verdict"},
+            "verdict_id": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          }
+        }
+      ]
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "summary",
+        "parent_criteria_refs",
+        "acceptance_checks",
+        "depends_on",
+        "produces",
+        "requires",
+        "planned_files",
+        "allowed_paths",
+        "out_of_scope",
+        "size_estimate"
+      ],
+      "properties": {
+        "task_id": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "parent_criteria_refs": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Criterion ids this child owns. D2/D9 require these to be exactly the coverage rows whose owner_task_id == this task_id.",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "acceptance_checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "depends_on": {
+          "type": "array",
+          "description": "task_ids this child depends on (D4: acyclic + no dangling).",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "produces": {
+          "type": "array",
+          "description": "Canonical output ids this child produces.",
+          "items": {"$ref": "#/$defs/canonical_id"}
+        },
+        "requires": {
+          "type": "array",
+          "description": "Canonical output ids this child needs (D5: each resolves to a producer in the depends_on closure OR a verified external_input).",
+          "items": {"$ref": "#/$defs/canonical_id"}
+        },
+        "planned_files": {
+          "type": "array",
+          "description": "Advisory forecast of files (pre-build).",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "allowed_paths": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Binding sandbox post-build (becomes the child product-plan allowed_paths).",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "size_estimate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["new_loc"],
+          "description": "Advisory (Codex C2 only). complexity_derived is computed from new_loc by the tool, not authored.",
+          "properties": {
+            "new_loc": {"type": "integer", "minimum": 0}
+          }
+        },
+        "allow_large": {
+          "type": "boolean",
+          "default": false,
+          "description": "Main's request that this child be allowed L. Codex adjudicates (C5); if granted, a wrapper-emitted large_override is required for D7."
+        }
+      }
+    }
+  }
+}

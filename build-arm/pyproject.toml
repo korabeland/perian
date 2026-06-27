@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+# The real suite lives in tools/. Scope collection there so an unscoped
+# `pytest` from the repo root is correct and can't be polluted by foreign
+# test files inside per-run scratch under state/think-tmp/ (uv caches pull in
+# packages whose own test suites would otherwise be collected).
+testpaths = ["tools"]
+norecursedirs = ["state", ".git"]

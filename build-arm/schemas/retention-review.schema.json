@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/retention-review.schema.json",
+  "title": "Retention Review",
+  "description": "Main's recommendation on what to do with completed artifacts. RECOMMENDATION ONLY — does not delete.",
+  "type": "object",
+  "required": ["job_id", "reviewed_at", "recommendation", "rationale"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "reviewed_at": {"type": "string", "format": "date-time"},
+    "recommendation": {
+      "type": "string",
+      "enum": ["keep", "improve", "park", "prune"],
+      "description": "keep=valuable as-is; improve=valuable but needs work; park=set aside; prune=remove"
+    },
+    "rationale": {"type": "string"},
+    "follow_up_actions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "If improve/park, what should happen next"
+    }
+  }
+}

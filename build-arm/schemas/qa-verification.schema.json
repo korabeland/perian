@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/qa-verification.schema.json",
+  "title": "QA Verification",
+  "description": "QA's independent verification — re-runs the same verification_commands and records its own outputs. Same shape as verification.schema.json but verifier: 'qa'.",
+  "type": "object",
+  "required": ["job_id", "ran_at", "commands_run", "outputs", "pass", "verifier"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "ran_at": {"type": "string", "format": "date-time"},
+    "commands_run": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "exit_code", "stdout_excerpt"],
+        "properties": {
+          "command": {"type": "string"},
+          "exit_code": {"type": "integer"},
+          "stdout_excerpt": {"type": "string"},
+          "stderr_excerpt": {"type": "string"},
+          "duration_seconds": {"type": "number"}
+        }
+      }
+    },
+    "pass": {"type": "boolean"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "verifier": {"type": "string", "const": "qa"},
+    "notes": {"type": "string"}
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perian.dev/schemas/parent-criteria.schema.json",
+  "title": "Parent Criteria",
+  "description": "Decomposition §4a. The frozen, structured list of parent criteria a work-breakdown must exactly partition. Main drafts; Codex EXPANDS any cross-cutting obligation into concrete per-child criteria (+ an integration/verifier criterion) then FREEZES via the freeze-wrapper. The binding hash lives in the wrapper-emitted criteria_frozen event, not here. Criterion-id uniqueness is enforced by decompose_check D2, not the schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["parent_idea_id", "criteria"],
+  "properties": {
+    "parent_idea_id": {"type": "string", "minLength": 1},
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
