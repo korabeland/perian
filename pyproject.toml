@@ -1,0 +1,33 @@
+[project]
+name = "perian"
+version = "0.0.0"
+description = "Perian — umbrella monorepo (Perian platform + ATB build/trust arm)"
+requires-python = ">=3.13"
+# Dependency floor for the test gate (build-arm suite) + Perian eval import.
+# Perian's full runtime stack (frontend/gradio + model runtime) is declared and
+# locked in U2, when the Ollama backend is settled.
+dependencies = [
+    "pyyaml>=6",
+    "jsonschema>=4",
+    "requests>=2.31",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.uv]
+# This is an app/workspace root, not an installable distribution.
+package = false
+
+[tool.pytest.ini_options]
+# The ATB trust suite lives in build-arm/tools/; the spine periodic scheduler
+# (U3) adds spine/scheduler/tests/ and the memory governor (U4) adds
+# spine/memory_governor/tests/. Scope collection to exactly those so an unscoped
+# `python -m pytest` from the monorepo root runs the trust suite (pre-merge
+# baseline: 1067 passed, 2 skipped; grows as the spine lands) and can't be
+# polluted by Perian's tree or per-run scratch under build-arm/state/. build-arm/
+# and spine/ go on sys.path so the scheduler's `from scheduler..`, the governor's
+# `from memory_governor..`, `from tools..`, and `from config import paths` resolve.
+testpaths = ["build-arm/tools", "spine/scheduler/tests", "spine/memory_governor/tests"]
+pythonpath = ["build-arm", "spine"]
+norecursedirs = ["build-arm/state", "spine/scheduler/state", "perian-core", ".git", ".venv"]
