@@ -1,0 +1,202 @@
+{
+  "fleet": {
+    "escalation": {
+      "model": "qwen3.5:27b-int4",
+      "params": "27B",
+      "size_gb": 16,
+      "backend": "mlx",
+      "role": "escalation target — fleet-best classification/reasoning. MLX int4, 64% faster than GGUF."
+    },
+    "adversarial_challenger": {
+      "model": "gemma4:26b",
+      "params": "25.2B (3.8B active)",
+      "size_gb": 17,
+      "backend": "ggml",
+      "role": "Aragorn adversarial challenger — cross-family (Gemma) MoE breaks correlated Qwen failure modes"
+    },
+    "first_pass": {
+      "model": "qwen3.5:9b-nvfp4",
+      "params": "9B",
+      "size_gb": 8.9,
+      "backend": "mlx",
+      "role": "daily extraction and scoring. MLX nvfp4, 53% faster than GGUF, quality within noise."
+    },
+    "triage": {
+      "model": "qwen3.5:2b",
+      "params": "2B",
+      "size_gb": 2.7,
+      "backend": "ggml",
+      "role": "cheap binary gate — reject obviously irrelevant items before extraction. GGUF (nvfp4 quality too low)."
+    }
+  },
+  "legolas": {
+    "last_research": "2026-05-25",
+    "frequency_days": 7,
+    "scope": "all tiers up to 36GB for 48GB M5 Pro — upgrades and new size tiers",
+    "requirements": [
+      "Available on Ollama",
+      "Strong structured JSON output",
+      "Supports disabling internal reasoning (think: false or equivalent)",
+      "Benchmarks competitively at its size tier",
+      "Fits within 36GB single-model budget (48GB M5 Pro)"
+    ],
+    "candidates": [
+      {
+        "model": "qwen3.5:2b",
+        "params": "2B",
+        "size_gb": 2.7,
+        "ollama_available": true,
+        "key_strengths": "Thinking OFF by default, 256K context, new Gated DeltaNet arch",
+        "comparison_to_fleet": "Adopted as triage gate (GGUF). nvfp4 quality too low.",
+        "source": "ollama.com/library/qwen3.5",
+        "found_date": "2026-03-26",
+        "status": "adopted",
+        "tier": "ultra-fast"
+      },
+      {
+        "model": "qwen3.5:4b",
+        "params": "4B",
+        "size_gb": 3.4,
+        "ollama_available": true,
+        "key_strengths": "Thinking OFF by default, 256K context, strong extraction at small size",
+        "comparison_to_fleet": "Evaluated — strong quality (0.94 extraction), MLX nvfp4 variant kept as reserve",
+        "source": "ollama.com/library/qwen3.5",
+        "found_date": "2026-03-26",
+        "status": "evaluated",
+        "tier": "fast"
+      },
+      {
+        "model": "qwen3.5:9b",
+        "params": "9B",
+        "size_gb": 6.6,
+        "ollama_available": true,
+        "key_strengths": "Thinking OFF by default, MMMU-Pro 69% vs qwen3-8B 57%, 256K context",
+        "comparison_to_fleet": "Adopted as first-pass (nvfp4 MLX variant). Replaces qwen3:8b.",
+        "source": "ollama.com/library/qwen3.5",
+        "found_date": "2026-03-26",
+        "status": "adopted",
+        "tier": "small"
+      },
+      {
+        "model": "qwen3.5:27b",
+        "params": "27B",
+        "size_gb": 17,
+        "ollama_available": true,
+        "key_strengths": "Dense 27B, 3GB smaller than qwen3:32b, better benchmarks, 256K context",
+        "comparison_to_fleet": "Adopted as escalation target (int4 MLX variant). Replaces qwen3:32b.",
+        "source": "ollama.com/library/qwen3.5",
+        "found_date": "2026-03-26",
+        "status": "adopted",
+        "tier": "heavy"
+      },
+      {
+        "model": "qwen3.5:35b-a3b",
+        "params": "35B (3B active)",
+        "size_gb": 24,
+        "ollama_available": true,
+        "key_strengths": "MoE 256 experts, 3B active = fast inference, claims to surpass qwen3-235B",
+        "comparison_to_fleet": "Evaluated — outscores 27b on all dims, 5x faster. int4 MLX variant kept as potential escalation upgrade.",
+        "source": "ollama.com/library/qwen3.5",
+        "found_date": "2026-03-26",
+        "status": "evaluated",
+        "tier": "heavy-moe"
+      },
+      {
+        "model": "gemma4:26b",
+        "params": "25.2B (3.8B active)",
+        "size_gb": 18,
+        "ollama_available": true,
+        "key_strengths": "MoE 128 experts + 1 shared, 3.8B active, AIME 88.3%, MMLU-Pro 82.6%, native function calling, 256K context, Apache 2.0",
+        "comparison_to_fleet": "Adopted as Aragorn adversarial challenger. Cross-family diversity, causal 0.90, nuanced 0.88.",
+        "source": "ollama.com/library/gemma4:26b, blog.google/gemma-4",
+        "found_date": "2026-04-03",
+        "status": "adopted",
+        "tier": "heavy-moe"
+      },
+      {
+        "model": "gemma4:31b",
+        "params": "30.7B",
+        "size_gb": 20,
+        "ollama_available": true,
+        "key_strengths": "Dense 31B, AIME 89.2%, MMLU-Pro 85.2%, LiveCodeBench 80%, Codeforces ELO 2150, native function calling, 256K context, Apache 2.0, #3 on Arena AI text leaderboard",
+        "comparison_to_fleet": "Evaluated — strong but 6903s eval time (too slow). Kept as reserve dense Gemma option.",
+        "source": "ollama.com/library/gemma4:31b, blog.google/gemma-4",
+        "found_date": "2026-04-03",
+        "status": "evaluated",
+        "tier": "heavy"
+      },
+      {
+        "model": "gemma4:e4b",
+        "params": "4.5B effective (8B with embeddings)",
+        "size_gb": 9.6,
+        "ollama_available": true,
+        "key_strengths": "Edge-optimized, MMLU-Pro 69.4%, native function calling, 128K context, multimodal (text+image+audio), Apache 2.0",
+        "comparison_to_fleet": "Evaluated — strong classification (1.0), decent reasoning. Kept as reserve cross-family fast-tier option.",
+        "source": "ollama.com/library/gemma4:e4b, blog.google/gemma-4",
+        "found_date": "2026-04-03",
+        "status": "evaluated",
+        "tier": "fast"
+      },
+      {
+        "model": "mistral-small3.2:latest",
+        "params": "24B",
+        "size_gb": 15,
+        "ollama_available": true,
+        "key_strengths": "Improved instruction following, robust function calling template, 128K context, multimodal (text+image), less repetition than 3.1",
+        "comparison_to_fleet": "Downloaded, not yet evaluated on Perian suite. Third-family diversity candidate.",
+        "source": "ollama.com/library/mistral-small3.2, mistral.ai/news",
+        "found_date": "2026-04-03",
+        "status": "downloaded",
+        "tier": "mid-heavy"
+      },
+      {
+        "model": "qwen3.6:27b",
+        "params": "27B",
+        "size_gb": 17.0,
+        "ollama_available": true,
+        "key_strengths": "Upgraded agentic coding (SWE-bench), thinking preservation across context history, 262K context, multimodal (text/image)",
+        "comparison_to_fleet": "Potential dense upgrade for the escalation target (qwen3.5:27b-int4). Excellent for complex structured coding tasks.",
+        "source": "ollama.com/library/qwen3.6",
+        "found_date": "2026-05-25",
+        "status": "unreviewed",
+        "tier": "heavy"
+      },
+      {
+        "model": "qwen3.6:35b",
+        "params": "35B (3B active)",
+        "size_gb": 24.0,
+        "ollama_available": true,
+        "key_strengths": "Sparse MoE architecture (3B active), high reasoning efficiency, thinking preservation, 262K context, fast inference",
+        "comparison_to_fleet": "Potential MoE upgrade for escalation or heavy-moe tier, replacing or complementing qwen3.5:35b-a3b.",
+        "source": "ollama.com/library/qwen3.6",
+        "found_date": "2026-05-25",
+        "status": "unreviewed",
+        "tier": "heavy-moe"
+      },
+      {
+        "model": "gemma4:e2b",
+        "params": "5.1B (2B active/effective)",
+        "size_gb": 7.2,
+        "ollama_available": true,
+        "key_strengths": "Edge-optimized, native function calling, 128K context window, multimodal (text/image/audio), Apache 2.0",
+        "comparison_to_fleet": "Provides a cross-family (Gemma) edge alternative to triage (qwen3.5:2b) or fast-tier candidates (gemma4:e4b).",
+        "source": "ollama.com/library/gemma4",
+        "found_date": "2026-05-25",
+        "status": "unreviewed",
+        "tier": "ultra-fast"
+      },
+      {
+        "model": "phi4",
+        "params": "14B",
+        "size_gb": 9.1,
+        "ollama_available": true,
+        "key_strengths": "State-of-the-art 14B SLM from Microsoft, MIT license, strong mathematics, logic, and instruction following, native function calling",
+        "comparison_to_fleet": "Provides a third-family (Microsoft Phi) alternative in the small/medium tier, complementing the first-pass Qwen model.",
+        "source": "ollama.com/library/phi4",
+        "found_date": "2026-05-25",
+        "status": "unreviewed",
+        "tier": "mid-heavy"
+      }
+    ]
+  }
+}
