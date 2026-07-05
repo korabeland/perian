@@ -2,6 +2,10 @@
 
 A framework for **local-first AI agents** — plan once with a frontier model, execute locally at zero marginal cost, refine on demand — together with **ATB**, a self-improving build/trust pipeline that builds and hardens software with local models under a strict *doer ≠ certifier* discipline.
 
+> **Frozen snapshot (June 2026).** A curated, manually-published snapshot of the
+> Perian framework — not a live mirror. Active development happens in a private
+> lab and is **not** automatically synced here, so this tree may lag it.
+
 ## Layout
 
 | Path | What |
