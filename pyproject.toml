@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = ["pytest>=9.1.1"]
 
 [tool.uv]
 # This is an app/workspace root, not an installable distribution.
