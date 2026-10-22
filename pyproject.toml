@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 # Perian's full runtime stack (frontend/gradio + model runtime) is declared and
 # locked in U2, when the Ollama backend is settled.
 dependencies = [
-    "pyyaml>=6",
+    "pyyaml>=6.0.3",
     "jsonschema>=4",
     "requests>=2.31",
 ]
